@@ -9,15 +9,22 @@ module WatchJoe
       @doc = (source =~ /^http/ ? Nokogiri::XML(open(source)) : Nokogiri::XML(source))
     end
 
-    def is_joe_currently_playing?
+    def joe_currently_online?
       @doc.xpath("//Online").first.inner_text == "false" ? false : true
     end
 
-    def what_game_is_joe_playing
+    def activity_occuring
       playing1 = @doc.xpath("//Info").first.inner_text
       playing2 = @doc.xpath("//Info2").first.inner_text
 
       [playing1, playing2].select {|p| !p.empty? }.join(' : ')
+    end
+
+    def cheevo_status
+      g =@doc.xpath("//GamerScore").first.inner_text
+      cheevo_count = @doc.xpath("//Achievements").collect {|a| a.inner_text.to_i}.inject {|sum, a| sum + a}
+
+      cheevo_count.to_s + ' cheevos, ' + g + 'G'
     end
   end
 end
