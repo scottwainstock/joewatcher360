@@ -116,19 +116,27 @@ HERE
 end
 
 describe WatchJoe::WatchJoe do
-  it '#see_if_joe_is_currently_playing' do
+  it '#joe_currently_online?' do
     wj = WatchJoe::WatchJoe.new(not_logged_in_data)
-    wj.is_joe_currently_playing?.should == false
+    wj.joe_currently_online?.should == false
 
     wj = WatchJoe::WatchJoe.new(logged_in_data)
-    wj.is_joe_currently_playing?.should == true
+    wj.joe_currently_online?.should == true
   end
 
-  it '#see_what_game_joe_is_playing' do
+  it '#activity_occuring' do
     wj = WatchJoe::WatchJoe.new(not_logged_in_data)
-    wj.what_game_is_joe_playing.should == 'Last seen 4 minutes ago playing Xbox.com'
+    wj.activity_occuring.should == 'Last seen 4 minutes ago playing Xbox.com'
 
     wj = WatchJoe::WatchJoe.new(logged_in_data)
-    wj.what_game_is_joe_playing.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
+    wj.activity_occuring.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
+  end
+
+  it '#cheevo_status' do
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data)
+    wj.cheevo_status.should == '12 cheevos, 14880G'
+
+    wj = WatchJoe::WatchJoe.new(logged_in_data)
+    wj.cheevo_status.should == '58 cheevos, 5935G'
   end
 end
