@@ -17,18 +17,9 @@ module WatchJoe
       if (self.joe_currently_online? && previously_online)
         @pstore['activity'] = self.activity_occuring
       elsif (self.joe_currently_online? && !previously_online)
-        @pstore.transaction do
-          @pstore['online'] = true
-          @pstore['first_seen'] = Time.now
-          @pstore['activity'] = self.activity_occuring
-        end
+        set_pstore_fields('online' => true, 'first_seen' => Time.now, 'activity' => self.activity_occuring)
       elsif (!self.joe_currently_online? && previously_online)
-        @pstore.transaction do
-          #dostuff
-          @pstore['online'] = false
-          @pstore['first_seen'] = nil
-          @pstore['activity'] = nil
-        end
+        set_pstore_fields('online' => nil, 'first_seen' => nil, 'activity' => nil)
       else
         #joe hasn't been online in a bit, let's just wait him out
       end
@@ -55,6 +46,10 @@ module WatchJoe
     def get_pstore_field(field)
       value = nil
       @pstore.transaction { value = @pstore[field]  }
+    end
+
+    def set_pstore_fields(fields)
+      @pstore.transaction { fields.each_pair { |f, v| @pstore[f] = v } }
     end
   end
 end
