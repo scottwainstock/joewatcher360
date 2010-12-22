@@ -1,14 +1,14 @@
 require 'watch_joe'
 
-def logged_in_data
+def logged_in_data(info, info2)
 <<HERE
 <?xml version="1.0"?>
 <XboxInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <AccountStatus>Gold</AccountStatus>
   <PresenceInfo>
     <Valid>true</Valid>
-    <Info>Playing Netflix</Info>
-    <Info2>Watching Stella: Season 1 - Campaign</Info2>
+    <Info>#{info}</Info>
+    <Info2>#{info2}</Info2>
     <LastSeen>2010-12-20T04:32:15+00:00</LastSeen>
     <Online>true</Online>
     <StatusText>Online</StatusText>
@@ -120,7 +120,7 @@ describe WatchJoe::WatchJoe do
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.joe_currently_online?.should == false
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
+    wj = WatchJoe::WatchJoe.new(logged_in_data('foo','bar'), 'test')
     wj.joe_currently_online?.should == true
   end
 
@@ -128,15 +128,15 @@ describe WatchJoe::WatchJoe do
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.activity_occuring.should == 'Last seen 4 minutes ago playing Xbox.com'
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
-    wj.activity_occuring.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
+    wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', 'in radtown'), 'test')
+    wj.activity_occuring.should == 'Being rad : in radtown'
   end
 
   it '#cheevo_status' do
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.cheevo_status.should == '12 cheevos, 14880G'
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
+    wj = WatchJoe::WatchJoe.new(logged_in_data('foo', 'bar'), 'test')
     wj.cheevo_status.should == '58 cheevos, 5935G'
   end
 
@@ -150,7 +150,7 @@ describe WatchJoe::WatchJoe do
     pstore.transaction { online = pstore['online'] }
     online.should == nil
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
+    wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
     wj.watch_joe
 
     pstore.transaction do
@@ -161,7 +161,14 @@ describe WatchJoe::WatchJoe do
 
     online.should == true
     first_seen.to_s.should == Time.now.to_s
-    activity.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
+    activity.should == 'Being rad'
+
+    wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
+    wj.watch_joe
+
+    online.should == true
+    first_seen.to_s.should == Time.now.to_s
+    activity.should == 'Being rad'
   end
 
   after(:each) do
