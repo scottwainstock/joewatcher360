@@ -14,6 +14,13 @@ module WatchJoe
 
       @twitter_client = Twitter::Client.new
     end
-      #      client.update("SECOND POST")
+
+    def update_twitter(msg)
+      #@twitter_client.update(self.trim_to_twitter_size(msg))
+    end
+
+    def self.trim_to_twitter_size(msg)
+      msg.slice(0, 140)
+    end
   end
 end
