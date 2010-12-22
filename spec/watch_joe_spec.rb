@@ -141,34 +141,33 @@ describe WatchJoe::WatchJoe do
   end
 
   it '#watch_joe' do
-    activity, online, first_seen = nil
     pstore = PStore.new('test_watch.pstore')
 
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.watch_joe
 
-    pstore.transaction { online = pstore['online'] }
-    online.should == nil
+    wj.get_pstore_field('online').should == nil
 
     wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
     wj.watch_joe
 
-    pstore.transaction do
-      online = pstore['online']
-      first_seen = pstore['first_seen']
-      activity = pstore['activity']
-    end
-
-    online.should == true
-    first_seen.to_s.should == Time.now.to_s
-    activity.should == 'Being rad'
+    wj.get_pstore_field('online').should == true
+    wj.get_pstore_field('first_seen').to_s.should == Time.now.to_s
+    wj.get_pstore_field('activity').should == 'Being rad'
 
     wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
     wj.watch_joe
 
-    online.should == true
-    first_seen.to_s.should == Time.now.to_s
-    activity.should == 'Being rad'
+    wj.get_pstore_field('online').should == true
+    wj.get_pstore_field('first_seen').to_s.should == Time.now.to_s
+    wj.get_pstore_field('activity').should == 'Being rad'
+
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
+    wj.watch_joe
+
+    wj.get_pstore_field('online').should == nil
+    wj.get_pstore_field('first_seen').should == nil
+    wj.get_pstore_field('activity').should == nil
   end
 
   after(:each) do
