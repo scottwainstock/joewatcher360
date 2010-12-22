@@ -4,21 +4,28 @@ module WatchJoe
   require 'pstore'
 
   class WatchJoe
-    attr_accessor :doc, :pstore
+    attr_accessor :doc, :pstore, :twitter
 
     def initialize(source, joe)
+      tc = ParseConfig.new('config/twitter.conf')
       @doc = (source =~ /^http/ ? Nokogiri::XML(open(source)) : Nokogiri::XML(source))
       @pstore = PStore.new(joe + '_watch.pstore')
+      @twitter = LogJoe.new(tc.get_value('consumer_key'), tc.get_value('consumer_secret'), tc.get_value('oauth_token'), tc.get_value('oauth_token_secret'))
     end
 
     def watch_joe
       previously_online = get_pstore_field('online')
 
       if (self.joe_currently_online? && previously_online)
-        @pstore['activity'] = self.activity_occuring
+        if (get_pstore_field('activity') != self.activity_occuring)
+          @twitter.update_twitter('New activity: ' + self.activity_occuring)
+          set_pstore_fields('activity' => self.activity_occuring)
+        end
       elsif (self.joe_currently_online? && !previously_online)
+        @twitter.update_twitter('WOAH GUYS! Joe is playing his XBox! Currently: ' + self.activity_occuring)
         set_pstore_fields('online' => true, 'first_seen' => Time.now, 'activity' => self.activity_occuring)
       elsif (!self.joe_currently_online? && previously_online)
+        @twitter.update_twitter('Bad news guys, Joe logged off of XBox Live')
         set_pstore_fields('online' => nil, 'first_seen' => nil, 'activity' => nil)
       else
         #joe hasn't been online in a bit, let's just wait him out

@@ -14,6 +14,9 @@ module WatchJoe
 
       @twitter_client = Twitter::Client.new
     end
-      #      client.update("SECOND POST")
+
+    def update_twitter(msg)
+      #@twitter_client.update(msg)
+    end
   end
 end

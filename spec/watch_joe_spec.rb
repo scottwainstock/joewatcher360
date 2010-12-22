@@ -1,5 +1,17 @@
 require 'watch_joe'
 
+class WatchJoe::LogJoe
+  def update_twitter(msg)
+    @msg = PStore.new('twitter_msg.pstore')
+    @msg.transaction { @msg['msg'] = 'Tweeted: ' + msg }
+  end
+end
+
+def get_pstore_field(pstore, field)
+  value = nil
+  pstore.transaction { value = pstore[field]  }
+end
+
 def logged_in_data(info, info2)
 <<HERE
 <?xml version="1.0"?>
@@ -141,36 +153,44 @@ describe WatchJoe::WatchJoe do
   end
 
   it '#watch_joe' do
-    pstore = PStore.new('test_watch.pstore')
+    user_data = PStore.new('test_watch.pstore')
+    twitter_msg = PStore.new('twitter_msg.pstore')
 
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.watch_joe
 
-    wj.get_pstore_field('online').should == nil
+    get_pstore_field(user_data, 'online').should == nil
+    get_pstore_field(twitter_msg, 'msg').should == nil
 
     wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
     wj.watch_joe
 
-    wj.get_pstore_field('online').should == true
-    wj.get_pstore_field('first_seen').to_s.should == Time.now.to_s
-    wj.get_pstore_field('activity').should == 'Being rad'
+    get_pstore_field(user_data, 'online').should == true
+    get_pstore_field(user_data, 'first_seen').to_s.should == Time.now.to_s
+    get_pstore_field(user_data, 'activity').should == 'Being rad'
+    get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: WOAH GUYS! Joe is playing his XBox! Currently: Being rad'
 
     wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
     wj.watch_joe
 
-    wj.get_pstore_field('online').should == true
-    wj.get_pstore_field('first_seen').to_s.should == Time.now.to_s
-    wj.get_pstore_field('activity').should == 'Being rad'
+    get_pstore_field(user_data, 'online').should == true
+    get_pstore_field(user_data, 'activity').should == 'Being rad'
+
+    wj = WatchJoe::WatchJoe.new(logged_in_data('Switched to a new thing', 'the newest of things'), 'test')
+    wj.watch_joe
+
+    get_pstore_field(user_data, 'online').should == true
+    get_pstore_field(user_data, 'activity').should == 'Switched to a new thing : the newest of things'
+    get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: New activity: Switched to a new thing : the newest of things'
 
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.watch_joe
 
-    wj.get_pstore_field('online').should == nil
-    wj.get_pstore_field('first_seen').should == nil
-    wj.get_pstore_field('activity').should == nil
+    get_pstore_field(user_data, 'online').should == nil
+    get_pstore_field(user_data, 'first_seen').should == nil
+    get_pstore_field(user_data, 'activity').should == nil
+    get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: Bad news guys, Joe logged off of XBox Live'
   end
 
-  after(:each) do
-    File.delete('test_watch.pstore') if File.exists? ('test_watch.pstore')
-  end
+  after(:each) { ['test_watch.pstore', 'twitter_msg.pstore'].each {|f| File.delete(f) if File.exists? (f) } }
 end
