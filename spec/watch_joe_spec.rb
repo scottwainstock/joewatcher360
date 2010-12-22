@@ -141,22 +141,27 @@ describe WatchJoe::WatchJoe do
   end
 
   it '#watch_joe' do
-    online, first_seen = nil
+    activity, online, first_seen = nil
     pstore = PStore.new('test_watch.pstore')
 
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.watch_joe
 
     pstore.transaction { online = pstore['online'] }
-    online.should == false
+    online.should == nil
 
     wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
     wj.watch_joe
 
-    pstore.transaction { online = pstore['online'] }
-    pstore.transaction { first_seen = pstore['first_seen'] }
+    pstore.transaction do
+      online = pstore['online']
+      first_seen = pstore['first_seen']
+      activity = pstore['activity']
+    end
+
     online.should == true
     first_seen.to_s.should == Time.now.to_s
+    activity.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
   end
 
   after(:each) do

@@ -15,16 +15,23 @@ module WatchJoe
       previously_online = nil
       @pstore.transaction { previously_online = @pstore['online']  }
 
-      if self.joe_currently_online?
-        if previously_online
-        else
-          @pstore.transaction do
-            @pstore['online'] = true
-            @pstore['first_seen'] = Time.now
-          end
+      if (self.joe_currently_online? && previously_online)
+        @pstore['activity'] = self.activity_occuring
+      elsif (self.joe_currently_online? && !previously_online)
+        @pstore.transaction do
+          @pstore['online'] = true
+          @pstore['first_seen'] = Time.now
+          @pstore['activity'] = self.activity_occuring
+        end
+      elsif (!self.joe_currently_online? && previously_online)
+        @pstore.transaction do
+          #dostuff
+          @pstore['activity'] = nil
+          @pstore['first_seen'] = nil
+          @pstore['online'] = false
         end
       else
-        @pstore.transaction { @pstore['online'] = false }
+        #joe hasn't been online in a bit, let's just wait him out
       end
     end
 
@@ -40,7 +47,7 @@ module WatchJoe
     end
 
     def cheevo_status
-      g =@doc.xpath('//GamerScore').first.inner_text
+      g = @doc.xpath('//GamerScore').first.inner_text
       cheevo_count = @doc.xpath('//Achievements').collect {|a| a.inner_text.to_i}.inject {|sum, a| sum + a}
 
       cheevo_count.to_s + ' cheevos, ' + g + 'G'
