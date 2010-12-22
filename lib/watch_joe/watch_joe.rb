@@ -12,8 +12,7 @@ module WatchJoe
     end
 
     def watch_joe
-      previously_online = nil
-      @pstore.transaction { previously_online = @pstore['online']  }
+      previously_online = get_pstore_field('online')
 
       if (self.joe_currently_online? && previously_online)
         @pstore['activity'] = self.activity_occuring
@@ -26,9 +25,9 @@ module WatchJoe
       elsif (!self.joe_currently_online? && previously_online)
         @pstore.transaction do
           #dostuff
-          @pstore['activity'] = nil
-          @pstore['first_seen'] = nil
           @pstore['online'] = false
+          @pstore['first_seen'] = nil
+          @pstore['activity'] = nil
         end
       else
         #joe hasn't been online in a bit, let's just wait him out
@@ -51,6 +50,11 @@ module WatchJoe
       cheevo_count = @doc.xpath('//Achievements').collect {|a| a.inner_text.to_i}.inject {|sum, a| sum + a}
 
       cheevo_count.to_s + ' cheevos, ' + g + 'G'
+    end
+
+    def get_pstore_field(field)
+      value = nil
+      @pstore.transaction { value = @pstore[field]  }
     end
   end
 end
