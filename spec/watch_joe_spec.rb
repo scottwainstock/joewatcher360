@@ -117,26 +117,49 @@ end
 
 describe WatchJoe::WatchJoe do
   it '#joe_currently_online?' do
-    wj = WatchJoe::WatchJoe.new(not_logged_in_data)
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.joe_currently_online?.should == false
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data)
+    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
     wj.joe_currently_online?.should == true
   end
 
   it '#activity_occuring' do
-    wj = WatchJoe::WatchJoe.new(not_logged_in_data)
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.activity_occuring.should == 'Last seen 4 minutes ago playing Xbox.com'
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data)
+    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
     wj.activity_occuring.should == 'Playing Netflix : Watching Stella: Season 1 - Campaign'
   end
 
   it '#cheevo_status' do
-    wj = WatchJoe::WatchJoe.new(not_logged_in_data)
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.cheevo_status.should == '12 cheevos, 14880G'
 
-    wj = WatchJoe::WatchJoe.new(logged_in_data)
+    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
     wj.cheevo_status.should == '58 cheevos, 5935G'
+  end
+
+  it '#watch_joe' do
+    online, first_seen = nil
+    pstore = PStore.new('test_watch.pstore')
+
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
+    wj.watch_joe
+
+    pstore.transaction { online = pstore['online'] }
+    online.should == false
+
+    wj = WatchJoe::WatchJoe.new(logged_in_data, 'test')
+    wj.watch_joe
+
+    pstore.transaction { online = pstore['online'] }
+    pstore.transaction { first_seen = pstore['first_seen'] }
+    online.should == true
+    first_seen.to_s.should == Time.now.to_s
+  end
+
+  after(:each) do
+    File.delete('test_watch.pstore') if File.exists? ('test_watch.pstore')
   end
 end
