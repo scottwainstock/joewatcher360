@@ -1,4 +1,5 @@
 require 'watch_joe'
+require 'timecop'
 
 class WatchJoe::LogJoe
   def update_twitter(msg)
@@ -183,13 +184,27 @@ describe WatchJoe::WatchJoe do
     get_pstore_field(user_data, 'activity').should == 'Switched to a new thing : the newest of things'
     get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: New activity: Switched to a new thing : the newest of things'
 
+    Timecop.travel(Time.now() + (60 * 50))
+
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
     wj.watch_joe
 
     get_pstore_field(user_data, 'online').should == nil
     get_pstore_field(user_data, 'first_seen').should == nil
     get_pstore_field(user_data, 'activity').should == nil
-    get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: Bad news guys, Joe logged off of XBox Live'
+    get_pstore_field(user_data, Time.now().strftime("%m%d%y")).should == 50
+    get_pstore_field(twitter_msg, 'msg').should == "Tweeted: Bad news guys, Joe logged off of XBox Live. This session was ~50 minutes. He's played for ~50 minutes today."
+
+    wj = WatchJoe::WatchJoe.new(logged_in_data('Being rad', nil), 'test')
+    wj.watch_joe
+
+    Timecop.travel(Time.now() + (60 * 10))
+
+    wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
+    wj.watch_joe
+
+    get_pstore_field(user_data, Time.now().strftime("%m%d%y")).should == 60
+    get_pstore_field(twitter_msg, 'msg').should == "Tweeted: Bad news guys, Joe logged off of XBox Live. This session was ~10 minutes. He's played for ~60 minutes today."
   end
 
   after(:each) { ['test_watch.pstore', 'twitter_msg.pstore'].each {|f| File.delete(f) if File.exists? (f) } }
