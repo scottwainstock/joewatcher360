@@ -25,11 +25,11 @@ module WatchJoe
         @twitter.update_twitter('WOAH GUYS! Joe is playing his XBox! Currently: ' + self.activity_occuring)
         set_pstore_fields('online' => true, 'first_seen' => Time.now, 'activity' => self.activity_occuring)
       elsif (!self.joe_currently_online? && previously_online)
-        session_minutes = ((Time.now() - get_pstore_field('first_seen')) / 60).to_i
-        today_minutes = get_pstore_field(Time.now().strftime("%m%d%y")).to_i + session_minutes
+        session_minutes = ((Time.now - get_pstore_field('first_seen')) / 60).to_i
+        today_minutes = get_pstore_field(Time.now.strftime("%m%d%y")).to_i + session_minutes
 
         @twitter.update_twitter('Bad news guys, Joe logged off of XBox Live. This session was ~' + session_minutes.to_s + " minutes. He's played for ~" + today_minutes.to_s + ' minutes today.')
-        set_pstore_fields('online' => nil, 'first_seen' => nil, 'activity' => nil, Time.now().strftime("%m%d%y") => today_minutes)
+        set_pstore_fields('online' => nil, 'first_seen' => nil, 'activity' => nil, Time.now.strftime("%m%d%y") => today_minutes)
       else
         #joe hasn't been online in a bit, let's just wait him out
       end
@@ -53,11 +53,21 @@ module WatchJoe
       cheevo_count.to_s + ' cheevos, ' + g + 'G'
     end
 
-    def end_of_week_update
-      total_minutes_this_week = 0
-      (0 .. 6).each {|d| total_minutes_this_week += get_pstore_field((Time.now() - (60*1440*d)).strftime("%m%d%y")).to_i }
+    def summary_update(type)
+      minutes = 0
 
-      @twitter.update_twitter("This is your Joe end of the week update. ~#{total_minutes_this_week} minutes were spent on XBox Live. Joe currently has #{cheevo_status}.")
+      if (type == 'week')
+        (0 .. 6).each {|d| minutes += get_pstore_field((Time.now - (60*1440*d)).strftime("%m%d%y")).to_i}
+      elsif (type == 'month')
+        num_days_in_month = (Date.new(Time.now.strftime("%Y").to_i, 12, 31) << (12-Time.now.strftime("%m").to_i)).day - 1
+        start_of_month = Time.parse(Time.now.strftime("%Y-%m-01"))
+
+        (0 .. num_days_in_month).each {|d| minutes += get_pstore_field((start_of_month + (60*1440*d)).strftime("%m%d%y")).to_i}
+      else
+        #make more types
+      end
+
+      @twitter.update_twitter("This is your Joe end of the #{type} update. ~#{minutes} minutes were spent on XBox Live. Joe currently has #{cheevo_status}.")
     end
 
     def get_pstore_field(field)
