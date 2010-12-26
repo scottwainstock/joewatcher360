@@ -53,6 +53,13 @@ module WatchJoe
       cheevo_count.to_s + ' cheevos, ' + g + 'G'
     end
 
+    def end_of_week_update
+      total_minutes_this_week = 0
+      (0 .. 6).each {|d| total_minutes_this_week += get_pstore_field((Time.now() - (60*1440*d)).strftime("%m%d%y")).to_i }
+
+      @twitter.update_twitter("This is your Joe end of the week update. ~#{total_minutes_this_week} minutes were spent on XBox Live. Joe currently has #{cheevo_status}.")
+    end
+
     def get_pstore_field(field)
       value = nil
       @pstore.transaction { value = @pstore[field]  }
