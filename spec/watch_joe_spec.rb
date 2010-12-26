@@ -211,22 +211,29 @@ describe WatchJoe::WatchJoe do
     get_pstore_field(twitter_msg, 'msg').should == "Tweeted: Bad news guys, Joe logged off of XBox Live. This session was ~10 minutes. He's played for ~60 minutes today."
   end
 
-  it '#end_of_week_update' do
+  it '#summary_update' do
     user_data = PStore.new('test_watch.pstore')
     twitter_msg = PStore.new('twitter_msg.pstore')
 
+    set_pstore_field(user_data, '113010', 2)
     set_pstore_field(user_data, '120110', 11)
     set_pstore_field(user_data, '121210', 11)
     set_pstore_field(user_data, '121310', 10)
     set_pstore_field(user_data, '121710', 20)
     set_pstore_field(user_data, '121910', 30)
+    set_pstore_field(user_data, '123110', 40)
+    set_pstore_field(user_data, '010111', 3)
 
     Timecop.travel(Time.local(2010, 12, 19, 12, 0, 0))
 
     wj = WatchJoe::WatchJoe.new(not_logged_in_data, 'test')
-    wj.end_of_week_update
+    wj.summary_update('week')
 
     get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: This is your Joe end of the week update. ~60 minutes were spent on XBox Live. Joe currently has 12 cheevos, 14880G.'
+
+    wj.summary_update('month')
+
+    get_pstore_field(twitter_msg, 'msg').should == 'Tweeted: This is your Joe end of the month update. ~122 minutes were spent on XBox Live. Joe currently has 12 cheevos, 14880G.'
   end
 
   after(:each) { ['test_watch.pstore', 'twitter_msg.pstore'].each {|f| File.delete(f) if File.exists? (f) } }
