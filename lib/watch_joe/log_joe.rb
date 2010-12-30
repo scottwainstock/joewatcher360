@@ -16,7 +16,7 @@ module WatchJoe
     end
 
     def update_twitter(msg)
-      #@twitter_client.update(self.trim_to_twitter_size(msg))
+      @twitter_client.update(LogJoe.trim_to_twitter_size(msg))
     end
 
     def self.trim_to_twitter_size(msg)

@@ -2,12 +2,13 @@ module WatchJoe
   require 'nokogiri'
   require 'open-uri'
   require 'pstore'
+  require 'parseconfig'
 
   class WatchJoe
     attr_accessor :doc, :pstore, :twitter
 
     def initialize(source, joe)
-      tc = ParseConfig.new('config/twitter.conf')
+      tc = ParseConfig.new('./config/twitter.conf')
       @doc = (source =~ /^http/ ? Nokogiri::XML(open(source)) : Nokogiri::XML(source))
       @pstore = PStore.new(joe + '_watch.pstore')
       @twitter = LogJoe.new(tc.get_value('consumer_key'), tc.get_value('consumer_secret'), tc.get_value('oauth_token'), tc.get_value('oauth_token_secret'))
